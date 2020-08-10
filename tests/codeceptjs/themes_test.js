@@ -43,6 +43,9 @@ Scenario('It should display button Labels: spectre | null', async (I) => {
   I.waitForText('Delete All')
   I.waitForText('Move down')
   I.waitForText('Move up')
+  I.seeElement('.table-striped') // can see when theme options is enabled
+  I.seeElement('.je-table-border') // can see when theme options is enabled
+  I.dontSeeElement('.je-noindent') // can't see when theme options is enabled
 })
 
 /*
@@ -76,7 +79,8 @@ Scenario('It should display button Labels: jqueryui | null', async (I) => {
 })
 */
 
-/*Scenario('It should display button Labels: foundation6 | null', async (I) => {
+/*
+Scenario('It should display button Labels: foundation6 | null', async (I) => {
   I.amOnPage('themes.html')
   I.selectOption('theme', 'Foundation 6')
   I.waitForText('Themes Test Page')
@@ -146,7 +150,7 @@ Scenario('It should display button Labels: bootstrap4 | null', async (I) => {
   I.waitForText('Move down')
   I.waitForText('Move up')
 })
-/*
+
 Scenario('It should display button Labels: bootstrap3 | null', async (I) => {
   I.amOnPage('themes.html')
   I.selectOption('theme', 'Bootstrap 3')
@@ -160,7 +164,7 @@ Scenario('It should display button Labels: bootstrap3 | null', async (I) => {
   I.waitForText('Move down')
   I.waitForText('Move up')
 })
-
+/*
 Scenario('It should display button Labels: bootstrap2 | null', async (I) => {
   I.amOnPage('themes.html')
   I.selectOption('theme', 'Bootstrap 2')
@@ -207,7 +211,7 @@ Scenario('It should display button Labels: bootstrap2 | null', async (I) => {
   I.seeElementInDOM('i.icon-copy')
   I.seeElementInDOM('i.icon-list')
 })
-
+ */
 Scenario('It should hide button Labels: null | bootstrap3', async (I) => {
   I.amOnPage('themes.html')
   I.selectOption('iconlib', 'Bootstrap 3')
@@ -237,7 +241,7 @@ Scenario('It should hide button Labels: null | bootstrap3', async (I) => {
   I.seeElementInDOM('i.glyphicon.glyphicon-copy')
   I.seeElementInDOM('i.glyphicon.glyphicon-list')
 })
-
+/*
 Scenario('It should hide button Labels: null | fontawesome3', async (I) => {
   I.amOnPage('themes.html')
   I.selectOption('iconlib', 'fontawesome 3')

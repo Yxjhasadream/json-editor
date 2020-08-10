@@ -66,3 +66,19 @@ Scenario('should be readonly if specified and not disabled', async (I) => {
   I.amOnPage('read-only.html');
   I.seeReadOnlyAttribute('[name="root[integer]"]');
 });
+
+Scenario('should update output when setValue is called', async (I) => {
+  I.amOnPage('integer.html');
+  I.click('.set-value');
+  I.see('2', '[data-schemapath="root.integer_range"] output');
+});
+
+Scenario('should validate value', async (I) => {
+  I.amOnPage('integer.html');
+  await I.fillField('[name="root[integer]"]', '5-5');
+  I.click('.get-value');
+  I.see('Value must be of type integer.', '[data-schemapath="root.integer"] div');
+  assert.equal(await I.grabValueFrom('.value'), '{"integer":"5-5","integer_number":5,"integer_range":5}');
+});
+
+

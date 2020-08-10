@@ -1,37 +1,40 @@
-import { ArrayEditor } from './array'
-import { $extend, $each, $trigger } from '../utilities'
-export var TableEditor = ArrayEditor.extend({
+import { ArrayEditor } from './array.js'
+import { extend, trigger } from '../utilities.js'
 
-  register: function () {
-    this._super()
+export class TableEditor extends ArrayEditor {
+  register () {
+    super.register()
     if (this.rows) {
-      for (var i = 0; i < this.rows.length; i++) {
+      for (let i = 0; i < this.rows.length; i++) {
         this.rows[i].register()
       }
     }
-  },
-  unregister: function () {
-    this._super()
+  }
+
+  unregister () {
+    super.unregister()
     if (this.rows) {
-      for (var i = 0; i < this.rows.length; i++) {
+      for (let i = 0; i < this.rows.length; i++) {
         this.rows[i].unregister()
       }
     }
-  },
-  getNumColumns: function () {
+  }
+
+  getNumColumns () {
     return Math.max(Math.min(12, this.width), 3)
-  },
-  preBuild: function () {
-    var itemSchema = this.jsoneditor.expandRefs(this.schema.items || {})
+  }
+
+  preBuild () {
+    const itemSchema = this.jsoneditor.expandRefs(this.schema.items || {})
 
     this.item_title = itemSchema.title || 'row'
-    this.item_default = itemSchema['default'] || null
+    this.item_default = itemSchema.default || null
     this.item_has_child_editors = itemSchema.properties || itemSchema.items
     this.width = 12
-    this._super()
-  },
-  build: function () {
-    var self = this
+    super.preBuild()
+  }
+
+  build () {
     this.table = this.theme.getTable()
     this.container.appendChild(this.table)
     this.thead = this.theme.getTableHead()
@@ -41,8 +44,8 @@ export var TableEditor = ArrayEditor.extend({
     this.row_holder = this.theme.getTableBody()
     this.table.appendChild(this.row_holder)
 
-    // Determine the default value of array element
-    var tmp = this.getElementEditor(0, true)
+    /* Determine the default value of array element */
+    const tmp = this.getElementEditor(0, true)
     this.item_default = tmp.getDefault()
     this.width = tmp.getNumColumns() + 2
 
@@ -71,52 +74,56 @@ export var TableEditor = ArrayEditor.extend({
     this.panel.appendChild(this.controls)
 
     if (this.item_has_child_editors) {
-      var ce = tmp.getChildEditors()
-      var order = tmp.property_order || Object.keys(ce)
-      for (var i = 0; i < order.length; i++) {
-        var th = self.theme.getTableHeaderCell(ce[order[i]].getTitle())
+      const ce = tmp.getChildEditors()
+      const order = tmp.property_order || Object.keys(ce)
+      for (let i = 0; i < order.length; i++) {
+        const th = this.theme.getTableHeaderCell(ce[order[i]].getTitle())
         if (ce[order[i]].options.hidden) th.style.display = 'none'
-        self.header_row.appendChild(th)
+        this.header_row.appendChild(th)
       }
     } else {
-      self.header_row.appendChild(self.theme.getTableHeaderCell(this.item_title))
+      this.header_row.appendChild(this.theme.getTableHeaderCell(this.item_title))
     }
 
     tmp.destroy()
     this.row_holder.innerHTML = ''
 
-    // Row Controls column
-    this.controls_header_cell = self.theme.getTableHeaderCell(' ')
-    self.header_row.appendChild(this.controls_header_cell)
+    /* Row Controls column */
+    this.controls_header_cell = this.theme.getTableHeaderCell(' ')
+    this.header_row.appendChild(this.controls_header_cell)
 
-    // Add controls
+    /* Add controls */
     this.addControls()
-  },
-  onChildEditorChange: function (editor) {
+  }
+
+  onChildEditorChange (editor) {
     this.refreshValue()
-    this._super()
-  },
-  getItemDefault: function () {
-    return $extend({}, {'default': this.item_default})['default']
-  },
-  getItemTitle: function () {
+    super.onChildEditorChange()
+  }
+
+  getItemDefault () {
+    return extend({}, { default: this.item_default }).default
+  }
+
+  getItemTitle () {
     return this.item_title
-  },
-  getElementEditor: function (i, ignore) {
-    var schemaCopy = $extend({}, this.schema.items)
-    var editor = this.jsoneditor.getEditorClass(schemaCopy, this.jsoneditor)
-    var row = this.row_holder.appendChild(this.theme.getTableRow())
-    var holder = row
+  }
+
+  getElementEditor (i, ignore) {
+    const schemaCopy = extend({}, this.schema.items)
+    const editor = this.jsoneditor.getEditorClass(schemaCopy, this.jsoneditor)
+    const row = this.row_holder.appendChild(this.theme.getTableRow())
+    let holder = row
     if (!this.item_has_child_editors) {
       holder = this.theme.getTableCell()
       row.appendChild(holder)
     }
 
-    var ret = this.jsoneditor.createEditor(editor, {
+    const ret = this.jsoneditor.createEditor(editor, {
       jsoneditor: this.jsoneditor,
       schema: schemaCopy,
       container: holder,
-      path: this.path + '.' + i,
+      path: `${this.path}.${i}`,
       parent: this,
       compact: true,
       table_row: true
@@ -136,8 +143,9 @@ export var TableEditor = ArrayEditor.extend({
     }
 
     return ret
-  },
-  destroy: function () {
+  }
+
+  destroy () {
     this.innerHTML = ''
     if (this.title && this.title.parentNode) this.title.parentNode.removeChild(this.title)
     if (this.description && this.description.parentNode) this.description.parentNode.removeChild(this.description)
@@ -147,13 +155,11 @@ export var TableEditor = ArrayEditor.extend({
 
     this.rows = this.title = this.description = this.row_holder = this.table = this.panel = null
 
-    this._super()
-  },
-  setValue: function (value, initial) {
-    // Update the array's value, adding/removing rows when necessary
-    value = value || []
+    super.destroy()
+  }
 
-    // Make sure value has between minItems and maxItems items in it
+  setValue (value = [], initial) {
+    /* Make sure value has between minItems and maxItems items in it */
     if (this.schema.minItems) {
       while (value.length < this.schema.minItems) {
         value.push(this.getItemDefault())
@@ -163,61 +169,51 @@ export var TableEditor = ArrayEditor.extend({
       value = value.slice(0, this.schema.maxItems)
     }
 
-    var serialized = JSON.stringify(value)
+    const serialized = JSON.stringify(value)
     if (serialized === this.serialized) return
 
-    var numrowsChanged = false
+    let numrowsChanged = false
 
-    var self = this
-    $each(value, function (i, val) {
-      if (self.rows[i]) {
-        // TODO: don't set the row's value if it hasn't changed
-        self.rows[i].setValue(val)
+    value.forEach((val, i) => {
+      if (this.rows[i]) {
+        /* TODO: don't set the row's value if it hasn't changed */
+        this.rows[i].setValue(val)
       } else {
-        self.addRow(val)
+        this.addRow(val)
         numrowsChanged = true
       }
     })
 
-    for (var j = value.length; j < self.rows.length; j++) {
-      var holder = self.rows[j].container
-      if (!self.item_has_child_editors) {
-        self.rows[j].row.parentNode.removeChild(self.rows[j].row)
+    for (let j = value.length; j < this.rows.length; j++) {
+      const holder = this.rows[j].container
+      if (!this.item_has_child_editors) {
+        this.rows[j].row.parentNode.removeChild(this.rows[j].row)
       }
-      self.rows[j].destroy()
+      this.rows[j].destroy()
       if (holder.parentNode) holder.parentNode.removeChild(holder)
-      self.rows[j] = null
+      this.rows[j] = null
       numrowsChanged = true
     }
-    self.rows = self.rows.slice(0, value.length)
+    this.rows = this.rows.slice(0, value.length)
 
-    self.refreshValue()
-    if (numrowsChanged || initial) self.refreshRowButtons()
+    this.refreshValue()
+    if (numrowsChanged || initial) this.refreshRowButtons()
 
-    self.onChange()
+    this.onChange()
 
-    // TODO: sortable
-  },
-  refreshRowButtons: function () {
-    var self = this
+    /* TODO: sortable */
+  }
 
-    // If we currently have minItems items in the array
-    var minItems = this.schema.minItems && this.schema.minItems >= this.rows.length
+  refreshRowButtons () {
+    /* If we currently have minItems items in the array */
+    const minItems = this.schema.minItems && this.schema.minItems >= this.rows.length
+    /* If we currently have maxItems items in the array */
+    const maxItems = this.schema.maxItems && this.schema.maxItems <= this.rows.length
 
-    var needRowButtons = false
-    $each(this.rows, function (i, editor) {
-      // Hide the move down button for the last row
-      if (editor.movedown_button) {
-        if (i === self.rows.length - 1) {
-          editor.movedown_button.style.display = 'none'
-        } else {
-          needRowButtons = true
-          editor.movedown_button.style.display = ''
-        }
-      }
-
-      // Hide the delete button if we have minItems items
+    let needRowButtons = false
+    this.rows.forEach((editor, i) => {
       if (editor.delete_button) {
+        /* Hide the delete button if we have minItems items */
         if (minItems) {
           editor.delete_button.style.display = 'none'
         } else {
@@ -226,13 +222,39 @@ export var TableEditor = ArrayEditor.extend({
         }
       }
 
+      if (editor.copy_button) {
+        /* Hide the copy button if we have maxItems items */
+        if (maxItems) {
+          editor.copy_button.style.display = 'none'
+        } else {
+          needRowButtons = true
+          editor.copy_button.style.display = ''
+        }
+      }
+
       if (editor.moveup_button) {
-        needRowButtons = true
+        /* Hide the moveup button for the first row */
+        if (i === 0) {
+          editor.moveup_button.style.display = 'none'
+        } else {
+          needRowButtons = true
+          editor.moveup_button.style.display = ''
+        }
+      }
+
+      if (editor.movedown_button) {
+        /* Hide the movedown button for the last row */
+        if (i === this.rows.length - 1) {
+          editor.movedown_button.style.display = 'none'
+        } else {
+          needRowButtons = true
+          editor.movedown_button.style.display = ''
+        }
       }
     })
 
-    // Show/hide controls column in table
-    $each(this.rows, function (i, editor) {
+    /* Show/hide controls column in table */
+    this.rows.forEach(editor => {
       if (needRowButtons) {
         editor.controls_cell.style.display = ''
       } else {
@@ -245,46 +267,35 @@ export var TableEditor = ArrayEditor.extend({
       this.controls_header_cell.style.display = 'none'
     }
 
-    var controlsNeeded = false
-
     if (!this.value.length) {
-      this.delete_last_row_button.style.display = 'none'
-      this.remove_all_rows_button.style.display = 'none'
       this.table.style.display = 'none'
-    } else if (this.value.length === 1) {
-      this.table.style.display = ''
-      this.remove_all_rows_button.style.display = 'none'
-
-      // If there are minItems items in the array, or configured to hide the delete_last_row button, hide the delete button beneath the rows
-      if (minItems || this.hide_delete_last_row_buttons) {
-        this.delete_last_row_button.style.display = 'none'
-      } else {
-        this.delete_last_row_button.style.display = ''
-        controlsNeeded = true
-      }
     } else {
       this.table.style.display = ''
-
-      if (minItems || this.hide_delete_last_row_buttons) {
-        this.delete_last_row_button.style.display = 'none'
-      } else {
-        this.delete_last_row_button.style.display = ''
-        controlsNeeded = true
-      }
-
-      if (minItems || this.hide_delete_all_rows_buttons) {
-        this.remove_all_rows_button.style.display = 'none'
-      } else {
-        this.remove_all_rows_button.style.display = ''
-        controlsNeeded = true
-      }
     }
 
-    // If there are maxItems in the array, hide the add button beneath the rows
-    if ((this.schema.maxItems && this.schema.maxItems <= this.rows.length) || this.hide_add_button) {
+    let controlsNeeded = false
+
+    /* If there are maxItems items in the array, or configured to hide the add_row_button button, hide the button beneath the rows */
+    if (maxItems || this.hide_add_button) {
       this.add_row_button.style.display = 'none'
     } else {
       this.add_row_button.style.display = ''
+      controlsNeeded = true
+    }
+
+    /* If there are minItems items in the array, or configured to hide the delete_last_row button, hide the button beneath the rows */
+    if (!this.value.length || minItems || this.hide_delete_last_row_buttons) {
+      this.delete_last_row_button.style.display = 'none'
+    } else {
+      this.delete_last_row_button.style.display = ''
+      controlsNeeded = true
+    }
+
+    /* If there are minItems items in the array, or configured to hide the remove_all_rows_button button, hide the button beneath the rows */
+    if (this.value.length <= 1 || minItems || this.hide_delete_all_rows_buttons) {
+      this.remove_all_rows_button.style.display = 'none'
+    } else {
+      this.remove_all_rows_button.style.display = ''
       controlsNeeded = true
     }
 
@@ -293,129 +304,140 @@ export var TableEditor = ArrayEditor.extend({
     } else {
       this.controls.style.display = ''
     }
-  },
-  refreshValue: function () {
-    var self = this
+  }
+
+  refreshValue () {
     this.value = []
 
-    $each(this.rows, function (i, editor) {
-      // Get the value for this editor
-      self.value[i] = editor.getValue()
+    this.rows.forEach((editor, i) => {
+      /* Get the value for this editor */
+      this.value[i] = editor.getValue()
     })
     this.serialized = JSON.stringify(this.value)
-  },
-  addRow: function (value) {
-    var self = this
-    var i = this.rows.length
+  }
 
-    self.rows[i] = this.getElementEditor(i)
+  addRow (value) {
+    const i = this.rows.length
 
-    var controlsHolder = self.rows[i].table_controls
+    this.rows[i] = this.getElementEditor(i)
 
-    // Buttons to delete row, move row up, and move row down
+    const controlsHolder = this.rows[i].table_controls
+
+    /* Buttons to delete row, copy row, move row up, and move row down */
     if (!this.hide_delete_buttons) {
-      self.rows[i].delete_button = this.getButton('', 'delete', this.translate('button_delete_row_title_short'))
-      self.rows[i].delete_button.classList.add('delete', 'json-editor-btntype-delete')
-      self.rows[i].delete_button.setAttribute('data-i', i)
-      self.rows[i].delete_button.addEventListener('click', function (e) {
+      this.rows[i].delete_button = this.getButton('', 'delete', this.translate('button_delete_row_title_short'))
+      this.rows[i].delete_button.classList.add('delete', 'json-editor-btntype-delete')
+      this.rows[i].delete_button.setAttribute('data-i', i)
+      this.rows[i].delete_button.addEventListener('click', e => {
         e.preventDefault()
         e.stopPropagation()
 
-        if (!self.askConfirmation()) {
+        if (!this.askConfirmation()) {
           return false
         }
 
-        var i = this.getAttribute('data-i') * 1
+        const j = e.currentTarget.getAttribute('data-i') * 1
+        const value = this.getValue()
 
-        var value = self.getValue()
+        value.splice(j, 1)
 
-        var newval = []
-        $each(value, function (j, row) {
-          if (j === i) return // If this is the one we're deleting
-          newval.push(row)
-        })
-        self.setValue(newval)
-        self.onChange(true)
-        self.jsoneditor.trigger('deleteRow', self.rows[i])
+        this.setValue(value)
+        this.onChange(true)
+        this.jsoneditor.trigger('deleteRow', this.rows[j])
       })
-      controlsHolder.appendChild(self.rows[i].delete_button)
+      controlsHolder.appendChild(this.rows[i].delete_button)
     }
 
-    if (i && !this.hide_move_buttons) {
-      self.rows[i].moveup_button = this.getButton('', 'moveup', this.translate('button_move_up_title'))
-      self.rows[i].moveup_button.classList.add('moveup', 'json-editor-btntype-move')
-      self.rows[i].moveup_button.setAttribute('data-i', i)
-      self.rows[i].moveup_button.addEventListener('click', function (e) {
+    if (this.show_copy_button) {
+      this.rows[i].copy_button = this.getButton('', 'copy', this.translate('button_copy_row_title_short'))
+      this.rows[i].copy_button.classList.add('copy', 'json-editor-btntype-copy')
+      this.rows[i].copy_button.setAttribute('data-i', i)
+      this.rows[i].copy_button.addEventListener('click', e => {
         e.preventDefault()
         e.stopPropagation()
-        var i = this.getAttribute('data-i') * 1
 
-        if (i <= 0) return
-        var rows = self.getValue()
-        var tmp = rows[i - 1]
-        rows[i - 1] = rows[i]
-        rows[i] = tmp
+        const j = e.currentTarget.getAttribute('data-i') * 1
+        const value = this.getValue()
 
-        self.setValue(rows)
-        self.onChange(true)
-        self.jsoneditor.trigger('moveRow', self.rows[i - 1])
+        value.splice(j + 1, 0, value[j])
+
+        this.setValue(value)
+        this.onChange(true)
+        this.jsoneditor.trigger('copyRow', this.rows[j + 1])
       })
-      controlsHolder.appendChild(self.rows[i].moveup_button)
+      controlsHolder.appendChild(this.rows[i].copy_button)
     }
 
     if (!this.hide_move_buttons) {
-      self.rows[i].movedown_button = this.getButton('', 'movedown', this.translate('button_move_down_title'))
-      self.rows[i].movedown_button.classList.add('movedown', 'json-editor-btntype-move')
-      self.rows[i].movedown_button.setAttribute('data-i', i)
-      self.rows[i].movedown_button.addEventListener('click', function (e) {
+      this.rows[i].moveup_button = this.getButton('', 'moveup', this.translate('button_move_up_title'))
+      this.rows[i].moveup_button.classList.add('moveup', 'json-editor-btntype-move')
+      this.rows[i].moveup_button.setAttribute('data-i', i)
+      this.rows[i].moveup_button.addEventListener('click', e => {
         e.preventDefault()
         e.stopPropagation()
-        var i = this.getAttribute('data-i') * 1
-        var rows = self.getValue()
-        if (i >= rows.length - 1) return
-        var tmp = rows[i + 1]
-        rows[i + 1] = rows[i]
-        rows[i] = tmp
 
-        self.setValue(rows)
-        self.onChange(true)
-        self.jsoneditor.trigger('moveRow', self.rows[i + 1])
+        const j = e.currentTarget.getAttribute('data-i') * 1
+        const value = this.getValue()
+
+        value.splice(j - 1, 0, value.splice(j, 1)[0])
+
+        this.setValue(value)
+        this.onChange(true)
+        this.jsoneditor.trigger('moveRow', this.rows[j - 1])
       })
-      controlsHolder.appendChild(self.rows[i].movedown_button)
+      controlsHolder.appendChild(this.rows[i].moveup_button)
     }
 
-    if (value) self.rows[i].setValue(value)
-  },
-  addControls: function () {
-    var self = this
+    if (!this.hide_move_buttons) {
+      this.rows[i].movedown_button = this.getButton('', 'movedown', this.translate('button_move_down_title'))
+      this.rows[i].movedown_button.classList.add('movedown', 'json-editor-btntype-move')
+      this.rows[i].movedown_button.setAttribute('data-i', i)
+      this.rows[i].movedown_button.addEventListener('click', e => {
+        e.preventDefault()
+        e.stopPropagation()
 
+        const j = e.currentTarget.getAttribute('data-i') * 1
+        const value = this.getValue()
+
+        value.splice(j + 1, 0, value.splice(j, 1)[0])
+
+        this.setValue(value)
+        this.onChange(true)
+        this.jsoneditor.trigger('moveRow', this.rows[j + 1])
+      })
+      controlsHolder.appendChild(this.rows[i].movedown_button)
+    }
+
+    if (value) this.rows[i].setValue(value)
+  }
+
+  addControls () {
     this.collapsed = false
     this.toggle_button = this.getButton('', 'collapse', this.translate('button_collapse'))
     this.toggle_button.classList.add('json-editor-btntype-toggle')
-    this.toggle_button.style.margin = '0 10px 0 0'
     if (this.title_controls) {
       this.title.insertBefore(this.toggle_button, this.title.childNodes[0])
-      this.toggle_button.addEventListener('click', function (e) {
+      this.toggle_button.addEventListener('click', e => {
         e.preventDefault()
         e.stopPropagation()
 
-        if (self.collapsed) {
-          self.collapsed = false
-          self.panel.style.display = ''
-          self.setButtonText(this, '', 'collapse', self.translate('button_collapse'))
+        if (this.collapsed) {
+          this.collapsed = false
+          this.panel.style.display = ''
+          this.setButtonText(e.currentTarget, '', 'collapse', this.translate('button_collapse'))
         } else {
-          self.collapsed = true
-          self.panel.style.display = 'none'
-          self.setButtonText(this, '', 'expand', self.translate('button_expand'))
+          this.collapsed = true
+          this.panel.style.display = 'none'
+          this.setButtonText(e.currentTarget, '', 'expand', this.translate('button_expand'))
         }
       })
 
-      // If it should start collapsed
+      /* If it should start collapsed */
       if (this.options.collapsed) {
-        $trigger(this.toggle_button, 'click')
+        trigger(this.toggle_button, 'click')
       }
 
-      // Collapse button disabled
+      /* Collapse button disabled */
       if (this.schema.options && typeof this.schema.options.disable_collapse !== 'undefined') {
         if (this.schema.options.disable_collapse) this.toggle_button.style.display = 'none'
       } else if (this.jsoneditor.options.disable_collapse) {
@@ -423,53 +445,53 @@ export var TableEditor = ArrayEditor.extend({
       }
     }
 
-    // Add "new row" and "delete last" buttons below editor
+    /* Add "new row" and "delete last" buttons below editor */
     this.add_row_button = this.getButton(this.getItemTitle(), 'add', this.translate('button_add_row_title', [this.getItemTitle()]))
     this.add_row_button.classList.add('json-editor-btntype-add')
-    this.add_row_button.addEventListener('click', function (e) {
+    this.add_row_button.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
 
-      var editor = self.addRow()
-      self.refreshValue()
-      self.refreshRowButtons()
-      self.onChange(true)
-      self.jsoneditor.trigger('addRow', editor)
+      const editor = this.addRow()
+      this.refreshValue()
+      this.refreshRowButtons()
+      this.onChange(true)
+      this.jsoneditor.trigger('addRow', editor)
     })
-    self.controls.appendChild(this.add_row_button)
+    this.controls.appendChild(this.add_row_button)
 
     this.delete_last_row_button = this.getButton(this.translate('button_delete_last', [this.getItemTitle()]), 'subtract', this.translate('button_delete_last_title', [this.getItemTitle()]))
     this.delete_last_row_button.classList.add('json-editor-btntype-deletelast')
-    this.delete_last_row_button.addEventListener('click', function (e) {
+    this.delete_last_row_button.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
 
-      if (!self.askConfirmation()) {
+      if (!this.askConfirmation()) {
         return false
       }
 
-      var rows = self.getValue()
-      var editor = rows.pop()
-      self.setValue(rows)
-      self.onChange(true)
-      self.jsoneditor.trigger('deleteRow', editor)
+      const rows = this.getValue()
+      const editor = rows.pop()
+      this.setValue(rows)
+      this.onChange(true)
+      this.jsoneditor.trigger('deleteRow', editor)
     })
-    self.controls.appendChild(this.delete_last_row_button)
+    this.controls.appendChild(this.delete_last_row_button)
 
     this.remove_all_rows_button = this.getButton(this.translate('button_delete_all'), 'delete', this.translate('button_delete_all_title'))
     this.remove_all_rows_button.classList.add('json-editor-btntype-deleteall')
-    this.remove_all_rows_button.addEventListener('click', function (e) {
+    this.remove_all_rows_button.addEventListener('click', (e) => {
       e.preventDefault()
       e.stopPropagation()
 
-      if (!self.askConfirmation()) {
+      if (!this.askConfirmation()) {
         return false
       }
 
-      self.setValue([])
-      self.onChange(true)
-      self.jsoneditor.trigger('deleteAllRows')
+      this.setValue([])
+      this.onChange(true)
+      this.jsoneditor.trigger('deleteAllRows')
     })
-    self.controls.appendChild(this.remove_all_rows_button)
+    this.controls.appendChild(this.remove_all_rows_button)
   }
-})
+}

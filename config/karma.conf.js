@@ -1,6 +1,15 @@
+const CssToJSON = require('../build/CssToJson')
+
 /* eslint-disable no-undef */
 // Karma configuration
-var webpackConfig = require('./webpack.test')
+const webpackConfig = {
+  devtool: 'inline-source-map',
+  plugins: [
+    new CssToJSON({
+      pattern: './src/**/*.css'
+    })
+  ]
+}
 
 module.exports = function (config) {
   config.set({
@@ -19,8 +28,8 @@ module.exports = function (config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      './src/core.js': [ 'webpack', 'sourcemap' ], // Same as entrypoint specified in webpack.config.js
-      './tests/unit/**/*.spec.js': [ 'webpack', 'sourcemap']
+      './src/core.js': ['webpack', 'sourcemap'], // Same as entrypoint specified in webpack.config.js
+      './tests/unit/**/*.spec.js': ['webpack', 'sourcemap']
     },
 
     // list of files / patterns to exclude

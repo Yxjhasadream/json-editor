@@ -1,35 +1,19 @@
-var webpackMerge = require('webpack-merge')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const webpackMerge = require('webpack-merge')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-var commonConfig = require('./webpack.common.js')
-var helpers = require('./helpers')
+const commonConfig = require('./webpack.common.js')
+const helpers = require('./helpers')
 
 // See https://webpack.js.org/guides/development/
-module.exports = webpackMerge(commonConfig, {
+module.exports = (env) => webpackMerge(commonConfig, {
   mode: 'development',
   devtool: '@source-map',
   output: {
-    path: helpers.root('dist/nonmin'),
+    path: env && env.travis === true ? helpers.root('dist') : helpers.root('dist/nonmin'),
     publicPath: '/dist/',
     filename: '[name].js',
-    chunkFilename: '[id].chunk.js'
+    libraryTarget: 'umd'
   },
-
   plugins: [
-    new CleanWebpackPlugin(), // Cleans directory before building
-    new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // all options are optional
-      filename: '[name].css',
-      chunkFilename: '[id].css',
-      ignoreOrder: false // Enable to remove warnings about conflicting order
-    })
-  ],
-
-  devServer: {
-    contentBase: helpers.root('.'),
-    historyApiFallback: true,
-    // stats: 'minimal',
-    port: 8080
-  }
+    new CleanWebpackPlugin() // Cleans directory before building
+  ]
 })
